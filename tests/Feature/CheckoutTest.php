@@ -155,7 +155,7 @@ class CheckoutTest extends TestCase
 
         $order = Order::first();
         $this->assertNotNull($order);
-        $response->assertRedirect(route('account.orders.show', $order->id));
+        $response->assertRedirect(route('payment.show', $order->id));
 
         $this->assertEquals(Order::STATUS_PENDING_PAYMENT, $order->status);
         $this->assertEquals('delivery', $order->fulfilment_method);

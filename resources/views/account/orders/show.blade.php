@@ -24,11 +24,16 @@
     </div>
 
     @if($order->isPendingPayment())
-        <div class="alert alert-warning">
-            <span>ℹ️</span>
-            <div>
-                <strong>Stock reservado con éxito.</strong> Tu pedido está pendiente de confirmación de pago.
+        <div class="alert alert-warning" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span style="font-size: 1.5rem;">ℹ️</span>
+                <div>
+                    <strong>Stock reservado temporalmente.</strong> Tu pedido está pendiente de confirmación de pago.
+                </div>
             </div>
+            <a href="{{ route('payment.show', $order->id) }}" class="btn btn-primary" style="margin-left: auto;">
+                💳 Proceder al Pago Ahora ({{ eur($order->total) }})
+            </a>
         </div>
     @endif
 
