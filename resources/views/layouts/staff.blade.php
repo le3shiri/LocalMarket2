@@ -14,34 +14,42 @@
 <body class="staff-body">
     <aside id="staff-sidebar" class="sidebar">
         <a href="{{ route('staff.dashboard') }}" class="logo">
-            <div class="logo-mark">🌿</div>
+            <div class="logo-mark">
+                <x-icon name="shopping-bag" size="20" stroke="2.2" />
+            </div>
             <span>Local<b>Market</b></span>
         </a>
 
         <div class="side-section">
             <div class="side-title">Operaciones</div>
             <a href="{{ route('staff.dashboard') }}" class="side-link {{ request()->routeIs('staff.dashboard') ? 'active' : '' }}">
-                <span class="ico">📊</span> Resumen
+                <x-icon name="layout-dashboard" size="18" />
+                <span>Resumen</span>
             </a>
 
             @if(auth()->user()->hasRole('admin', 'warehouse', 'cashier'))
                 <a href="{{ route('staff.orders.index') }}" class="side-link {{ request()->routeIs('staff.orders.*') ? 'active' : '' }}">
-                    <span class="ico">📦</span> Pedidos
+                    <x-icon name="package" size="18" />
+                    <span>Pedidos</span>
                 </a>
             @endif
 
             @if(auth()->user()->hasRole('admin', 'warehouse'))
                 <a href="{{ route('staff.inventory.index') }}" class="side-link {{ request()->routeIs('staff.inventory.*') ? 'active' : '' }}">
-                    <span class="ico">🏬</span> Inventario
+                    <x-icon name="warehouse" size="18" />
+                    <span>Inventario</span>
                 </a>
                 <a href="{{ route('staff.batches.index') }}" class="side-link {{ request()->routeIs('staff.batches.*') ? 'active' : '' }}">
-                    <span class="ico">🏷️</span> Lotes y Caducidades
+                    <x-icon name="tags" size="18" />
+                    <span>Lotes y Caducidades</span>
                 </a>
             @endif
 
             @if(auth()->user()->hasRole('admin', 'cashier'))
                 <a href="{{ route('staff.pos.create') }}" class="side-link {{ request()->routeIs('staff.pos.*') ? 'active' : '' }}">
-                    <span class="ico">💳</span> Venta en Tienda <small class="badge badge-amber" style="margin-left:auto;">Scope</small>
+                    <x-icon name="credit-card" size="18" />
+                    <span>Venta en Tienda (TPV)</span>
+                    <span class="badge badge-green" style="margin-left: auto; font-size: 0.65rem; padding: 0.1rem 0.45rem;">POS</span>
                 </a>
             @endif
         </div>
@@ -50,33 +58,51 @@
             <div class="side-section">
                 <div class="side-title">Administración</div>
                 <a href="{{ route('staff.products.index') }}" class="side-link {{ request()->routeIs('staff.products.*') ? 'active' : '' }}">
-                    <span class="ico">🍎</span> Productos
+                    <x-icon name="shopping-bag" size="18" />
+                    <span>Productos</span>
                 </a>
                 <a href="{{ route('staff.categories.index') }}" class="side-link {{ request()->routeIs('staff.categories.*') ? 'active' : '' }}">
-                    <span class="ico">📁</span> Categorías
+                    <x-icon name="folder" size="18" />
+                    <span>Categorías</span>
                 </a>
                 <a href="{{ route('staff.coupons.index') }}" class="side-link {{ request()->routeIs('staff.coupons.*') ? 'active' : '' }}">
-                    <span class="ico">🎟️</span> Cupones
+                    <x-icon name="ticket" size="18" />
+                    <span>Cupones</span>
                 </a>
                 <a href="{{ route('staff.users.index') }}" class="side-link {{ request()->routeIs('staff.users.*') ? 'active' : '' }}">
-                    <span class="ico">👥</span> Usuarios
+                    <x-icon name="users" size="18" />
+                    <span>Usuarios</span>
                 </a>
                 <a href="{{ route('staff.audit.index') }}" class="side-link {{ request()->routeIs('staff.audit.*') ? 'active' : '' }}">
-                    <span class="ico">📜</span> Auditoría
+                    <x-icon name="shield-check" size="18" />
+                    <span>Auditoría</span>
                 </a>
             </div>
         @endif
 
         <div class="side-user">
-            <div>
-                <strong>{{ auth()->user()->name }}</strong>
-                <span class="badge badge-green">{{ auth()->user()->roleLabel() }}</span>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="side-user-avatar">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <strong style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ auth()->user()->name }}</strong>
+                    <span class="badge badge-green" style="font-size: 0.68rem; padding: 0.1rem 0.5rem; margin-top: 0.2rem;">
+                        {{ auth()->user()->roleLabel() }}
+                    </span>
+                </div>
             </div>
-            <div style="margin-top: .6rem; display: flex; gap: .4rem;">
-                <a href="{{ route('home') }}" class="btn btn-sm btn-ghost" style="color: #cfe6da; border: 1px solid rgba(255,255,255,0.2);">Ver tienda</a>
-                <form action="{{ route('logout') }}" method="POST" class="inline-form">
+            <div style="margin-top: 0.85rem; display: flex; gap: 0.4rem;">
+                <a href="{{ route('home') }}" class="btn btn-sm btn-ghost" style="color: #cbd5e1; border: 1px solid rgba(255,255,255,0.15); flex: 1; font-size: 0.75rem; padding: 0.35rem 0.5rem;">
+                    <x-icon name="external-link" size="13" />
+                    <span>Tienda</span>
+                </a>
+                <form action="{{ route('logout') }}" method="POST" class="inline-form" style="flex: 1;">
                     @csrf
-                    <button type="submit">Cerrar sesión</button>
+                    <button type="submit" class="btn btn-sm btn-ghost" style="color: #fca5a5; border: 1px solid rgba(239,68,68,0.25); width: 100%; font-size: 0.75rem; padding: 0.35rem 0.5rem;">
+                        <x-icon name="log-out" size="13" />
+                        <span>Salir</span>
+                    </button>
                 </form>
             </div>
         </div>
@@ -84,33 +110,42 @@
 
     <div class="staff-main">
         <header class="staff-top">
-            <div class="flex">
-                <button type="button" class="btn btn-sm btn-outline staff-menu-toggle" data-toggle="#staff-sidebar" aria-label="Abrir menú lateral">☰ Menú</button>
+            <div class="flex" style="gap: 1rem;">
+                <button type="button" class="btn btn-sm btn-secondary staff-menu-toggle" data-toggle="#staff-sidebar" aria-label="Abrir menú lateral">
+                    <x-icon name="menu" size="18" />
+                    <span>Menú</span>
+                </button>
                 <h1>@yield('title', 'Panel de gestión')</h1>
             </div>
-            <div>
-                <span class="muted" style="font-size: .85rem;">{{ date('d/m/Y') }} · Barcelona</span>
+            <div class="flex" style="gap: 0.75rem;">
+                <span class="badge badge-green" style="font-size: 0.78rem; padding: 0.25rem 0.65rem;">
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #10b981; margin-right: 4px;"></span>
+                    Sistema en línea · Barcelona
+                </span>
+                <span class="muted" style="font-size: 0.82rem; font-variant-numeric: tabular-nums;">
+                    {{ date('d/m/Y') }}
+                </span>
             </div>
         </header>
 
         <div class="staff-content">
             @if (session('success'))
                 <div class="alert alert-success" data-autohide role="alert">
-                    <span>✓</span>
+                    <x-icon name="check" size="20" stroke="2.5" />
                     <div>{{ session('success') }}</div>
                 </div>
             @endif
 
             @if (session('error'))
                 <div class="alert alert-error" role="alert">
-                    <span>⚠️</span>
+                    <x-icon name="alert-triangle" size="20" stroke="2.5" />
                     <div>{{ session('error') }}</div>
                 </div>
             @endif
 
             @if ($errors->any())
                 <div class="alert alert-error" role="alert">
-                    <span>⚠️</span>
+                    <x-icon name="alert-circle" size="20" stroke="2.5" />
                     <div>
                         <strong>Corrige los siguientes errores:</strong>
                         <ul>

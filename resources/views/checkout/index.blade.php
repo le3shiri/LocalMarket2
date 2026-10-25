@@ -2,8 +2,16 @@
 
 @section('content')
 <div class="container page">
-    <h1>Finalizar compra</h1>
-    <p class="muted">Selecciona tu método de entrega y completa tus datos para reservar tus productos.</p>
+    <div class="page-head">
+        <div>
+            <h1>Finalizar compra</h1>
+            <p class="muted">Selecciona tu método de entrega y completa tus datos para reservar tus productos de forma inmediata.</p>
+        </div>
+        <a href="{{ route('cart.index') }}" class="btn btn-sm btn-secondary">
+            <x-icon name="arrow-left" size="14" />
+            <span>Volver a la cesta</span>
+        </a>
+    </div>
 
     <form action="{{ route('checkout.store') }}" method="POST" data-once>
         @csrf
@@ -20,14 +28,20 @@
                         <div class="option-card">
                             <input type="radio" id="method-delivery" name="fulfilment_method" value="delivery" {{ old('fulfilment_method', 'delivery') === 'delivery' ? 'checked' : '' }}>
                             <label for="method-delivery">
-                                <strong>🚚 Entrega a domicilio</strong>
+                                <strong>
+                                    <x-icon name="truck" size="18" />
+                                    <span>Entrega a domicilio</span>
+                                </strong>
                                 <small>Reparto en Barcelona ciudad (08001–08042). Gratis a partir de {{ eur($freeFrom) }}.</small>
                             </label>
                         </div>
                         <div class="option-card">
                             <input type="radio" id="method-pickup" name="fulfilment_method" value="pickup" {{ old('fulfilment_method') === 'pickup' ? 'checked' : '' }}>
                             <label for="method-pickup">
-                                <strong>🏬 Recogida en tienda</strong>
+                                <strong>
+                                    <x-icon name="store" size="18" />
+                                    <span>Recogida en tienda</span>
+                                </strong>
                                 <small>Gratis. Carrer del Mercat, 12, Ciutat Vella, 08001 Barcelona.</small>
                             </label>
                         </div>
@@ -90,13 +104,13 @@
 
             <!-- Order Summary Sticky -->
             <div class="card summary">
-                <h3>Resumen de la compra</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem;">Resumen de la compra</h3>
 
                 <div style="margin-bottom: 1rem; max-height: 220px; overflow-y: auto;">
                     @foreach($cart['items'] as $item)
-                        <div class="summary-row" style="font-size: .88rem;">
+                        <div class="summary-row" style="font-size: 0.88rem;">
                             <span>{{ qty($item['quantity'], $item['product']->sale_unit) }} · {{ $item['product']->name }}</span>
-                            <span>{{ eur($item['line_total']) }}</span>
+                            <span style="font-weight: 600;">{{ eur($item['line_total']) }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -107,7 +121,7 @@
                 </div>
 
                 @if(isset($discount) && $discount > 0)
-                    <div class="summary-row" style="color: #166534;">
+                    <div class="summary-row" style="color: var(--emerald-700);">
                         <span>Descuento ({{ $coupon->code }}):</span>
                         <strong>-{{ eur($discount) }}</strong>
                     </div>
@@ -117,7 +131,7 @@
                     <span>Envío:</span>
                     <span>
                         @if($cart['subtotal'] >= $freeFrom)
-                            <strong style="color: var(--green-700);">Gratis</strong>
+                            <strong style="color: var(--emerald-700);">Gratis</strong>
                         @else
                             {{ eur($deliveryFee) }} <small class="muted">(gratis desde {{ eur($freeFrom) }})</small>
                         @endif
@@ -131,40 +145,43 @@
 
                 <div class="summary-row total">
                     <span>Total a pagar:</span>
-                    <span style="color: var(--green-950);">
+                    <span style="color: var(--slate-900);">
                         {{ eur($finalTotal) }}
                     </span>
                 </div>
 
                 <!-- Coupon Box -->
-                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-light);">
                     @if(isset($coupon) && $coupon)
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.5rem 0.75rem; border-radius: 6px;">
-                            <span style="font-size: 0.85rem; color: #166534; font-weight: 600;">
-                                🎟️ Cupón <strong>{{ $coupon->code }}</strong> (-{{ $coupon->valueFormatted() }})
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--emerald-50); border: 1px solid var(--emerald-200); padding: 0.6rem 0.85rem; border-radius: var(--radius-sm);">
+                            <span style="font-size: 0.85rem; color: var(--emerald-800); font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
+                                <x-icon name="ticket" size="16" />
+                                <span>Cupón <strong>{{ $coupon->code }}</strong> (-{{ $coupon->valueFormatted() }})</span>
                             </span>
                             <form action="{{ route('checkout.coupon.remove') }}" method="POST" style="margin: 0;">
                                 @csrf
-                                <button type="submit" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">
+                                <button type="submit" style="background: none; border: none; color: var(--red-600); cursor: pointer; font-size: 0.8rem; text-decoration: underline; font-weight: 500;">
                                     Quitar
                                 </button>
                             </form>
                         </div>
                     @else
-                        <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--ink);">¿Tienes un cupón de descuento?</div>
+                        <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--slate-800);">¿Tienes un cupón de descuento?</div>
                         <div style="display: flex; gap: 0.5rem;">
-                            <input type="text" form="coupon-form" name="code" placeholder="CÓDIGO" style="text-transform: uppercase; font-size: 0.85rem; padding: 0.35rem 0.5rem; flex: 1; border: 1px solid var(--border); border-radius: 4px;">
+                            <input type="text" form="coupon-form" name="code" placeholder="CÓDIGO" style="text-transform: uppercase; font-size: 0.85rem; padding: 0.4rem 0.6rem; flex: 1; border: 1px solid var(--border-light); border-radius: var(--radius-sm);">
                             <button type="submit" form="coupon-form" class="btn btn-sm btn-outline">Aplicar</button>
                         </div>
                     @endif
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">
-                    Confirmar pedido y reservar stock
+                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem; font-weight: 700;">
+                    <x-icon name="check" size="18" stroke="2.5" />
+                    <span>Confirmar pedido y reservar stock</span>
                 </button>
 
-                <p class="muted" style="font-size: .78rem; text-align: center; margin-top: .8rem;">
-                    🔒 Al confirmar, se reservará el stock de tus productos de forma inmediata para evitar que se agoten.
+                <p class="muted" style="font-size: 0.78rem; text-align: center; margin-top: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                    <x-icon name="lock" size="13" />
+                    <span>Reserva de stock inmediata garantizada.</span>
                 </p>
             </div>
         </div>

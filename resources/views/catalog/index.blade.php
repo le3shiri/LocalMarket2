@@ -16,36 +16,48 @@
             </p>
         </div>
         @if(request('categoria') || request('q'))
-            <a href="{{ route('catalog.index') }}" class="btn btn-sm btn-ghost">Limpiar filtros ✕</a>
+            <a href="{{ route('catalog.index') }}" class="btn btn-sm btn-secondary">
+                <x-icon name="x" size="14" />
+                <span>Limpiar filtros</span>
+            </a>
         @endif
     </div>
 
     <div class="chips" style="margin-bottom: 2rem;">
         <a href="{{ route('catalog.index', ['q' => request('q')]) }}" class="chip {{ !request('categoria') ? 'active' : '' }}">
-            Todos los productos
+            <x-icon name="shopping-bag" size="14" />
+            <span>Todos los productos</span>
         </a>
         @foreach($categories as $category)
             <a href="{{ route('catalog.index', ['categoria' => $category->slug, 'q' => request('q')]) }}" 
                class="chip {{ request('categoria') === $category->slug ? 'active' : '' }}">
-                {{ $category->icon }} {{ $category->name }}
+                <x-icon name="folder" size="14" />
+                <span>{{ $category->name }}</span>
             </a>
         @endforeach
     </div>
 
     @if($products->isEmpty())
         <div class="card empty">
-            <div class="empty-icon">🔍</div>
+            <div class="empty-icon">
+                <x-icon name="search" size="28" />
+            </div>
             <h3>No se encontraron productos</h3>
             <p class="muted">Prueba a buscar con otras palabras o selecciona una categoría diferente.</p>
-            <a href="{{ route('catalog.index') }}" class="btn btn-primary" style="margin-top: 1rem;">Ver todos los productos</a>
+            <a href="{{ route('catalog.index') }}" class="btn btn-primary" style="margin-top: 1.25rem;">
+                <x-icon name="shopping-bag" size="16" />
+                <span>Ver todos los productos</span>
+            </a>
         </div>
     @else
         <div class="product-grid">
             @foreach($products as $product)
                 <div class="product-card">
                     <div class="product-media">
-                        <div class="product-fallback">{{ $product->category->icon ?? '🍎' }}</div>
-                        <span class="badge badge-green">{{ $product->category->name }}</span>
+                        <div class="product-fallback">
+                            <x-icon name="shopping-bag" size="28" />
+                        </div>
+                        <span class="badge badge-green">{{ $product->category->name ?? 'General' }}</span>
                     </div>
                     <div class="product-body">
                         <span class="product-cat">{{ $product->unitLabel() }}</span>

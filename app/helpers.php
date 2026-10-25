@@ -36,3 +36,11 @@ if (! function_exists('fdate')) {
         return $date->format($withTime ? 'd/m/Y H:i' : 'd/m/Y');
     }
 }
+
+if (! function_exists('icon')) {
+    /** Render a clean Lucide SVG icon: icon('package', 'w-4 h-4') */
+    function icon(string $name, string $class = '', int $size = 18): string
+    {
+        return view('components.icon', ['name' => $name, 'class' => $class, 'size' => $size])->render();
+    }
+}
