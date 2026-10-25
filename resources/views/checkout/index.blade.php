@@ -106,6 +106,13 @@
                     <strong>{{ eur($cart['subtotal']) }}</strong>
                 </div>
 
+                @if(isset($discount) && $discount > 0)
+                    <div class="summary-row" style="color: #166534;">
+                        <span>Descuento ({{ $coupon->code }}):</span>
+                        <strong>-{{ eur($discount) }}</strong>
+                    </div>
+                @endif
+
                 <div class="summary-row">
                     <span>Envío:</span>
                     <span>
@@ -117,11 +124,39 @@
                     </span>
                 </div>
 
+                @php
+                    $finalSub = max(0.00, $cart['subtotal'] - ($discount ?? 0));
+                    $finalTotal = $finalSub + ($cart['subtotal'] >= $freeFrom ? 0 : $deliveryFee);
+                @endphp
+
                 <div class="summary-row total">
                     <span>Total a pagar:</span>
                     <span style="color: var(--green-950);">
-                        {{ eur($cart['subtotal'] >= $freeFrom ? $cart['subtotal'] : $cart['subtotal'] + $deliveryFee) }}
+                        {{ eur($finalTotal) }}
                     </span>
+                </div>
+
+                <!-- Coupon Box -->
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border);">
+                    @if(isset($coupon) && $coupon)
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 0.5rem 0.75rem; border-radius: 6px;">
+                            <span style="font-size: 0.85rem; color: #166534; font-weight: 600;">
+                                🎟️ Cupón <strong>{{ $coupon->code }}</strong> (-{{ $coupon->valueFormatted() }})
+                            </span>
+                            <form action="{{ route('checkout.coupon.remove') }}" method="POST" style="margin: 0;">
+                                @csrf
+                                <button type="submit" style="background: none; border: none; color: #dc2626; cursor: pointer; font-size: 0.8rem; text-decoration: underline;">
+                                    Quitar
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div style="font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--ink);">¿Tienes un cupón de descuento?</div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="text" form="coupon-form" name="code" placeholder="CÓDIGO" style="text-transform: uppercase; font-size: 0.85rem; padding: 0.35rem 0.5rem; flex: 1; border: 1px solid var(--border); border-radius: 4px;">
+                            <button type="submit" form="coupon-form" class="btn btn-sm btn-outline">Aplicar</button>
+                        </div>
+                    @endif
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.5rem;">
@@ -133,6 +168,10 @@
                 </p>
             </div>
         </div>
+    </form>
+
+    <form id="coupon-form" action="{{ route('checkout.coupon.apply') }}" method="POST" style="display: none;">
+        @csrf
     </form>
 </div>
 @endsection
