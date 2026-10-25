@@ -9,12 +9,15 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Staff\AuditController;
 use App\Http\Controllers\Staff\CategoryController;
+use App\Http\Controllers\Staff\CouponController;
 use App\Http\Controllers\Staff\DashboardController;
 use App\Http\Controllers\Staff\InventoryController;
 use App\Http\Controllers\Staff\OrderController as StaffOrderController;
 use App\Http\Controllers\Staff\ProductController;
 use App\Http\Controllers\Staff\StoreSaleController;
+use App\Http\Controllers\Staff\UserController;
 use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -57,6 +60,8 @@ Route::middleware(['auth'])->group(function () {
     // Checkout
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/cupon/aplicar', [CheckoutController::class, 'applyCoupon'])->name('checkout.coupon.apply');
+    Route::post('/checkout/cupon/eliminar', [CheckoutController::class, 'removeCoupon'])->name('checkout.coupon.remove');
 
     // Customer Orders
     Route::get('/mis-pedidos', [AccountOrderController::class, 'index'])->name('account.orders');
@@ -105,17 +110,13 @@ Route::prefix('gestion')->middleware(['auth', 'role:admin,warehouse,cashier'])->
     Route::middleware('role:admin')->group(function () {
         Route::resource('productos', ProductController::class)->names('products')->parameters(['productos' => 'product']);
         Route::resource('categorias', CategoryController::class)->names('categories')->parameters(['categorias' => 'category']);
+        Route::resource('cupones', CouponController::class)->names('coupons')->parameters(['cupones' => 'coupon']);
 
-        Route::get('/cupones', function () {
-            return 'Gestión de cupones (Sprint 6)';
-        })->name('coupons.index');
+        // Staff Users Management
+        Route::resource('usuarios', UserController::class)->names('users')->parameters(['usuarios' => 'user']);
+        Route::post('usuarios/{user}/toggle', [UserController::class, 'toggleActive'])->name('users.toggle');
 
-        Route::get('/usuarios', function () {
-            return 'Gestión de usuarios (Sprint 6)';
-        })->name('users.index');
-
-        Route::get('/auditoria', function () {
-            return 'Registro de auditoría (Sprint 6)';
-        })->name('audit.index');
+        // Audit Log Viewer
+        Route::get('/auditoria', [AuditController::class, 'index'])->name('audit.index');
     });
 });

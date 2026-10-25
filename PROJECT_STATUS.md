@@ -56,16 +56,27 @@ Last Updated: 2026-10-25
   - Automated tests: `PaymentTest` (5 tests).
   - Test suite: **50 passed**, 193 assertions. Code style: `pint --test` clean.
 
+- **Sprint 6 — Admin Management and Promotions (Completed & Merged into `develop`, tag `sprint-6`):**
+  - Database schema & model for `coupons` (percentage/fixed, minimum order, usage limits, temporal validity).
+  - `CouponService`: discount calculations, session application, and usage auditing.
+  - Integration of coupon code input, removal, and live discount calculations on Checkout.
+  - Staff Admin Employee Management (`Staff\UserController`): full CRUD for internal staff users (`admin`, `warehouse`, `cashier`), password reset, and activation toggle with self-deactivation protection.
+  - Staff Admin Audit Trail Viewer (`Staff\AuditController`): inspection of immutable system audit logs with filters.
+  - Automated tests: `CouponTest` (4 tests), `AdminManagementTest` (5 tests).
+  - Test suite: **59 passed**, 227 assertions. Code style: `pint --test` clean.
+
 ## 2. Current Sprint
 
-- **Next:** **Sprint 6 — Admin Management and Promotions**
-- **Branch:** `sprint/6-admin-and-promotions`
+- **Next:** **Sprint 7 — Stabilization, Comprehensive Seeders, E2E Review, Documentation & Final Delivery**
+- **Branch:** `sprint/7-stabilization-and-docs`
 
-## 3. Next Actions for Sprint 6
+## 3. Next Actions for Sprint 7
 
-1. Database schema: `coupons` table (code, type: percentage/fixed, value, min_order_amount, max_uses, uses_count, starts_at, expires_at, is_active).
-2. Implement `CouponService` with discount calculation, validity checks, and usage limits.
-3. Integrate coupon input into the Checkout flow with real-time feedback and discount subtraction.
-4. Staff Admin Employee Management: full CRUD for internal staff users (`admin`, `warehouse`, `cashier`) with activation/deactivation toggles and password resets.
-5. Staff Admin Audit Trail Viewer: table and filters inspecting `audit_logs` (by action, entity, user, date).
-6. Automated feature tests for Coupons and Admin User/Audit management.
+1. Seeders & Demonstration Data: enhance `DatabaseSeeder` to populate complete, rich demonstration datasets (users, categories, fresh products with lot codes and expiry dates, warehouse & store inventory, sample orders in different states, sample coupons).
+2. End-to-end verification of all user journeys:
+   - Customer: registration -> catalog -> cart -> checkout with coupon -> simulated payment -> order tracking.
+   - Cashier: POS in-store sale.
+   - Warehouse technician: stock receipt with lot/expiry -> transfer warehouse to store.
+   - Administrator: product/category management -> user management -> audit log inspection.
+3. Documentation consolidation: verify user manuals, deployment instructions, architecture documents, and ADRs.
+4. Final Git merge to `develop` and `main` with `sprint-7` and release tags.

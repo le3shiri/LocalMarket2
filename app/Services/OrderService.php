@@ -17,7 +17,8 @@ class OrderService
     public function __construct(
         protected InventoryService $inventoryService,
         protected CartService $cartService,
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected CouponService $couponService
     ) {}
 
     /**
@@ -54,10 +55,13 @@ class OrderService
         }
 
         $subtotal = $cart['subtotal'];
-        $discount = 0.00; // Coupons handled in Sprint 6
-        $total = round($subtotal - $discount + $deliveryFee, 2);
 
-        return DB::transaction(function () use ($customer, $checkoutData, $cart, $onlineLocation, $fulfilmentMethod, $subtotal, $discount, $deliveryFee, $total) {
+        // Coupon calculation (Sprint 6)
+        $appliedCoupon = $this->couponService->getAppliedCoupon($subtotal);
+        $discount = $appliedCoupon ? $appliedCoupon->calculateDiscount($subtotal) : 0.00;
+        $total = round(max(0.00, $subtotal - $discount) + $deliveryFee, 2);
+
+        return DB::transaction(function () use ($customer, $checkoutData, $cart, $onlineLocation, $fulfilmentMethod, $subtotal, $discount, $deliveryFee, $total, $appliedCoupon) {
             // Generate unique order number (BR-ORD-01): LM-YYYYMMDD-XXXXX
             $today = date('Ymd');
             $random = strtoupper(substr(uniqid(), -5));
@@ -74,6 +78,8 @@ class OrderService
                 'discount' => $discount,
                 'delivery_fee' => $deliveryFee,
                 'total' => $total,
+                'coupon_id' => $appliedCoupon?->id,
+                'coupon_code' => $appliedCoupon?->code,
                 'customer_name' => $checkoutData['customer_name'] ?? $customer->name,
                 'customer_email' => $checkoutData['customer_email'] ?? $customer->email,
                 'phone' => $checkoutData['phone'] ?? $customer->phone,
@@ -102,7 +108,13 @@ class OrderService
                 ]);
             }
 
-            // 3. Record status history
+            // 3. Increment coupon usage if used
+            if ($appliedCoupon) {
+                $this->couponService->recordUsage($appliedCoupon);
+                $this->couponService->removeCoupon();
+            }
+
+            // 4. Record status history
             OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'from_status' => null,
@@ -111,11 +123,12 @@ class OrderService
                 'note' => 'Pedido tramitado y stock reservado. Pendiente de pago.',
             ]);
 
-            // 4. Audit
+            // 5. Audit
             AuditLog::record('order.created', $order, [
                 'number' => $order->number,
                 'total' => $order->total,
                 'fulfilment' => $order->fulfilment_method,
+                'coupon' => $appliedCoupon?->code,
             ]);
 
             // Clear customer cart
