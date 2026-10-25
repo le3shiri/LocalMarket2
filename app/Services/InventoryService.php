@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AuditLog;
 use App\Models\Batch;
 use App\Models\Location;
+use App\Models\Order;
 use App\Models\Product;
 use App\Models\StockLevel;
 use App\Models\StockMovement;
@@ -43,6 +44,122 @@ class InventoryService
         }
 
         return $stockLevel;
+    }
+
+    /**
+     * Reserve stock for an online order (BR-INV-05).
+     * Locks the stock row; if available < quantity, throws an exception and rolls back.
+     */
+    public function reserveStock(Product $product, Location $location, float $quantity, ?int $orderId = null): StockMovement
+    {
+        if ($quantity <= 0) {
+            throw new InvalidArgumentException('La cantidad a reservar debe ser mayor que 0.');
+        }
+
+        $stock = $this->getStockLevel($product->id, $location->id, true);
+
+        if ($stock->available < $quantity) {
+            throw new InvalidArgumentException('Stock disponible insuficiente para '.$product->name.' ('.$stock->available.' disponible).');
+        }
+
+        $stock->reserved += $quantity;
+        $stock->save();
+
+        return StockMovement::create([
+            'product_id' => $product->id,
+            'location_id' => $location->id,
+            'user_id' => auth()->id(),
+            'order_id' => $orderId,
+            'type' => StockMovement::TYPE_RESERVATION,
+            'quantity' => $quantity,
+            'reason' => 'Reserva por pedido online #'.($orderId ?: 'nuevo'),
+        ]);
+    }
+
+    /**
+     * Release reserved stock on order failure, expiry, or cancellation (BR-INV-07).
+     */
+    public function releaseReservation(Order $order, Location $location): void
+    {
+        foreach ($order->items as $item) {
+            if (! $item->product_id) {
+                continue;
+            }
+
+            $stock = $this->getStockLevel($item->product_id, $location->id, true);
+            $stock->reserved = max(0.0, (float) $stock->reserved - (float) $item->quantity);
+            $stock->save();
+
+            StockMovement::create([
+                'product_id' => $item->product_id,
+                'location_id' => $location->id,
+                'user_id' => auth()->id(),
+                'order_id' => $order->id,
+                'type' => StockMovement::TYPE_RELEASE,
+                'quantity' => -(float) $item->quantity,
+                'reason' => 'Liberación de reserva por pedido cancelado/fallido #'.$order->number,
+            ]);
+        }
+    }
+
+    /**
+     * Consume reserved stock upon successful payment (BR-INV-06).
+     * quantity -= qty, reserved -= qty.
+     */
+    public function consumeReservation(Order $order, Location $location): void
+    {
+        foreach ($order->items as $item) {
+            if (! $item->product_id) {
+                continue;
+            }
+
+            $stock = $this->getStockLevel($item->product_id, $location->id, true);
+            $stock->quantity = max(0.0, (float) $stock->quantity - (float) $item->quantity);
+            $stock->reserved = max(0.0, (float) $stock->reserved - (float) $item->quantity);
+            $stock->save();
+
+            // Deduct batches if perishable
+            $product = $item->product;
+            if ($product && $product->tracks_expiry) {
+                $this->deductBatchesFefo($product->id, $location->id, (float) $item->quantity);
+            }
+
+            StockMovement::create([
+                'product_id' => $item->product_id,
+                'location_id' => $location->id,
+                'user_id' => auth()->id(),
+                'order_id' => $order->id,
+                'type' => StockMovement::TYPE_SALE,
+                'quantity' => -(float) $item->quantity,
+                'reason' => 'Consumo por pago confirmado en pedido #'.$order->number,
+            ]);
+        }
+    }
+
+    /**
+     * Return stock to inventory when an already-paid order is cancelled by Admin (BR-INV-08).
+     */
+    public function returnStock(Order $order, Location $location): void
+    {
+        foreach ($order->items as $item) {
+            if (! $item->product_id) {
+                continue;
+            }
+
+            $stock = $this->getStockLevel($item->product_id, $location->id, true);
+            $stock->quantity += (float) $item->quantity;
+            $stock->save();
+
+            StockMovement::create([
+                'product_id' => $item->product_id,
+                'location_id' => $location->id,
+                'user_id' => auth()->id(),
+                'order_id' => $order->id,
+                'type' => StockMovement::TYPE_RETURN,
+                'quantity' => (float) $item->quantity,
+                'reason' => 'Devolución de stock por cancelación de pedido pagado #'.$order->number,
+            ]);
+        }
     }
 
     /**
@@ -121,7 +238,6 @@ class InventoryService
         }
 
         return DB::transaction(function () use ($product, $fromLocation, $toLocation, $quantity, $user, $reason) {
-            // Lock rows in a deterministic order by location_id to prevent deadlocks
             $firstLocId = min($fromLocation->id, $toLocation->id);
             $secondLocId = max($fromLocation->id, $toLocation->id);
 
@@ -135,14 +251,12 @@ class InventoryService
                 throw new InvalidArgumentException('Stock disponible insuficiente en el origen ('.$sourceStock->available.' disponible).');
             }
 
-            // Deduct from source and add to destination
             $sourceStock->quantity -= $quantity;
             $sourceStock->save();
 
             $targetStock->quantity += $quantity;
             $targetStock->save();
 
-            // Transfer batches FEFO if perishable
             if ($product->tracks_expiry) {
                 $this->transferBatchesFefo($product->id, $fromLocation->id, $toLocation->id, $quantity);
             }
@@ -204,7 +318,6 @@ class InventoryService
             $stock->quantity += $quantityDelta;
             $stock->save();
 
-            // If negative adjustment on perishable, deduct batches FEFO
             if ($product->tracks_expiry && $quantityDelta < 0) {
                 $this->deductBatchesFefo($product->id, $location->id, abs($quantityDelta));
             }
@@ -229,7 +342,7 @@ class InventoryService
     }
 
     /**
-     * Record physical in-store sale by Cashier (decreases physical store stock).
+     * Record physical in-store sale by Cashier.
      */
     public function recordStoreSale(
         Product $product,
@@ -327,7 +440,6 @@ class InventoryService
             $batch->quantity -= $transferAmount;
             $batch->save();
 
-            // Target batch with same lot and expiry
             $targetBatch = Batch::where('product_id', $productId)
                 ->where('location_id', $toLocationId)
                 ->where('lot_code', $batch->lot_code)

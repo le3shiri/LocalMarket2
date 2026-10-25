@@ -1,13 +1,17 @@
 <?php
 
+use App\Http\Controllers\AccountOrderController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Staff\CategoryController;
 use App\Http\Controllers\Staff\DashboardController;
 use App\Http\Controllers\Staff\InventoryController;
+use App\Http\Controllers\Staff\OrderController as StaffOrderController;
 use App\Http\Controllers\Staff\ProductController;
 use App\Http\Controllers\Staff\StoreSaleController;
 use Illuminate\Support\Facades\Route;
@@ -23,9 +27,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/catalogo', [CatalogController::class, 'index'])->name('catalog.index');
 Route::get('/producto/{slug}', [CatalogController::class, 'show'])->name('catalog.show');
 
-Route::get('/cesta', function () {
-    return 'Cesta en construcción (Sprint 4)';
-})->name('cart.index');
+// Cart Routes
+Route::get('/cesta', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cesta/agregar', [CartController::class, 'add'])->name('cart.add');
+Route::post('/cesta/actualizar', [CartController::class, 'update'])->name('cart.update');
+Route::post('/cesta/eliminar', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/cesta/vaciar', [CartController::class, 'clear'])->name('cart.clear');
 
 // Guest Authentication Routes
 Route::middleware('guest')->group(function () {
@@ -41,22 +48,28 @@ Route::middleware('guest')->group(function () {
     Route::post('/restablecer-password', [PasswordResetController::class, 'update'])->name('password.update');
 });
 
-// Authenticated Routes
+// Authenticated Customer Routes
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/mis-pedidos', function () {
-        return 'Mis pedidos (Sprint 4)';
-    })->name('account.orders');
+    // Checkout
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+
+    // Customer Orders
+    Route::get('/mis-pedidos', [AccountOrderController::class, 'index'])->name('account.orders');
+    Route::get('/mis-pedidos/{id}', [AccountOrderController::class, 'show'])->name('account.orders.show');
+    Route::post('/mis-pedidos/{id}/cancelar', [AccountOrderController::class, 'cancel'])->name('account.orders.cancel');
 });
 
 // Staff Management Routes (Role-based access)
 Route::prefix('gestion')->middleware(['auth', 'role:admin,warehouse,cashier'])->name('staff.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/pedidos', function () {
-        return 'Gestión de pedidos (Sprint 4)';
-    })->name('orders.index');
+    // Staff Orders Management
+    Route::get('/pedidos', [StaffOrderController::class, 'index'])->name('orders.index');
+    Route::get('/pedidos/{order}', [StaffOrderController::class, 'show'])->name('orders.show');
+    Route::post('/pedidos/{order}/estado', [StaffOrderController::class, 'updateStatus'])->name('orders.status');
 
     Route::middleware('role:admin,warehouse')->group(function () {
         Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');

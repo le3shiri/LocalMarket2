@@ -45,13 +45,30 @@
                 </div>
             </div>
 
-            <div style="margin-top: 1.5rem; padding: 1.2rem; background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius);">
-                <p class="muted" style="font-size: .88rem; margin-bottom: 1rem;">
-                    * La funcionalidad del carrito de compra y reserva de existencias se activará en el módulo de Inventario y Pedidos (Sprint 4).
-                </p>
-                <div class="qty-row">
-                    <a href="{{ route('catalog.index') }}" class="btn btn-outline btn-lg">&larr; Seguir comprando</a>
-                </div>
+            <div style="margin-top: 1.5rem; padding: 1.5rem; background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius);">
+                <form method="POST" action="{{ route('cart.add') }}" style="display: flex; flex-direction: column; gap: 1rem;">
+                    @csrf
+                    <input type="hidden" name="product_id" value="{{ $product->id }}">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <label for="quantity" style="font-weight: 600; color: var(--ink);">Cantidad:</label>
+                        <input type="number" 
+                               name="quantity" 
+                               id="quantity" 
+                               class="form-control" 
+                               value="{{ $product->unit === 'kg' ? '0.5' : '1' }}" 
+                               min="{{ $product->unit === 'kg' ? '0.1' : '1' }}" 
+                               step="{{ $product->unit === 'kg' ? '0.05' : '1' }}" 
+                               style="width: 120px;">
+                        <span style="color: var(--muted); font-size: 0.95rem;">{{ $product->unitLabel() }}</span>
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 0.5rem;">
+                        <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                            🛒 Añadir a la cesta
+                        </button>
+                        <a href="{{ route('catalog.index') }}" class="btn btn-outline btn-lg">&larr; Seguir comprando</a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
