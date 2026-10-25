@@ -13,28 +13,28 @@
 <div class="card" style="margin-bottom: 1.5rem;">
     <form method="GET" action="{{ route('staff.orders.index') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
         <div class="form-group" style="flex: 1; min-width: 220px; margin-bottom: 0;">
-            <label for="search" class="form-label">Buscar Pedido / Cliente</label>
-            <input type="text" name="search" id="search" class="form-control" value="{{ request('search') }}" placeholder="Núm. pedido, nombre o email...">
+            <label for="q" class="form-label">Buscar Pedido / Cliente</label>
+            <input type="text" name="q" id="q" class="form-control" value="{{ request('q') }}" placeholder="Núm. pedido, nombre o email...">
         </div>
 
         <div class="form-group" style="min-width: 180px; margin-bottom: 0;">
             <label for="status" class="form-label">Estado</label>
             <select name="status" id="status" class="form-control">
                 <option value="">-- Todos los estados --</option>
-                @foreach(\App\Models\Order::STATUSES as $statusKey)
+                @foreach(\App\Models\Order::STATUS_LABELS as $statusKey => $label)
                     <option value="{{ $statusKey }}" {{ request('status') === $statusKey ? 'selected' : '' }}>
-                        {{ ucfirst(str_replace('_', ' ', $statusKey)) }}
+                        {{ $label }}
                     </option>
                 @endforeach
             </select>
         </div>
 
         <div class="form-group" style="min-width: 180px; margin-bottom: 0;">
-            <label for="fulfilment_type" class="form-label">Método</label>
-            <select name="fulfilment_type" id="fulfilment_type" class="form-control">
+            <label for="fulfilment_method" class="form-label">Método</label>
+            <select name="fulfilment_method" id="fulfilment_method" class="form-control">
                 <option value="">-- Todos los métodos --</option>
-                <option value="delivery" {{ request('fulfilment_type') === 'delivery' ? 'selected' : '' }}>A domicilio (08001-08042)</option>
-                <option value="pickup" {{ request('fulfilment_type') === 'pickup' ? 'selected' : '' }}>Recogida en tienda</option>
+                <option value="delivery" {{ request('fulfilment_method') === 'delivery' ? 'selected' : '' }}>A domicilio (08001-08042)</option>
+                <option value="pickup" {{ request('fulfilment_method') === 'pickup' ? 'selected' : '' }}>Recogida en tienda</option>
             </select>
         </div>
 
@@ -68,7 +68,7 @@
                     @foreach($orders as $order)
                         <tr>
                             <td>
-                                <strong style="font-family: monospace;">{{ $order->order_number }}</strong>
+                                <strong style="font-family: monospace;">{{ $order->number }}</strong>
                             </td>
                             <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
                             <td>
@@ -82,22 +82,10 @@
                                     <span class="badge" style="background-color: #fef3c7; color: #92400e;">Recogida en tienda</span>
                                 @endif
                             </td>
-                            <td><strong>{{ number_format($order->total_amount, 2, ',', '.') }} €</strong></td>
+                            <td><strong>{{ eur($order->total) }}</strong></td>
                             <td>
-                                @php
-                                    $badgeColors = [
-                                        'pending_payment' => ['bg' => '#fef3c7', 'text' => '#92400e'],
-                                        'paid' => ['bg' => '#dcfce7', 'text' => '#166534'],
-                                        'preparing' => ['bg' => '#e0e7ff', 'text' => '#3730a3'],
-                                        'ready_for_pickup' => ['bg' => '#fef08a', 'text' => '#854d0e'],
-                                        'out_for_delivery' => ['bg' => '#fed7aa', 'text' => '#9a3412'],
-                                        'completed' => ['bg' => '#bbf7d0', 'text' => '#14532d'],
-                                        'cancelled' => ['bg' => '#fee2e2', 'text' => '#991b1b'],
-                                    ];
-                                    $col = $badgeColors[$order->status] ?? ['bg' => '#f1f5f9', 'text' => '#334155'];
-                                @endphp
-                                <span class="badge" style="background-color: {{ $col['bg'] }}; color: {{ $col['text'] }};">
-                                    {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                <span class="badge {{ $order->statusBadge() }}">
+                                    {{ $order->statusLabel() }}
                                 </span>
                             </td>
                             <td style="text-align: right;">
