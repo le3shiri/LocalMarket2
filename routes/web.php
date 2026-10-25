@@ -6,7 +6,10 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Staff\CategoryController;
+use App\Http\Controllers\Staff\DashboardController;
+use App\Http\Controllers\Staff\InventoryController;
 use App\Http\Controllers\Staff\ProductController;
+use App\Http\Controllers\Staff\StoreSaleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,28 +52,31 @@ Route::middleware(['auth'])->group(function () {
 
 // Staff Management Routes (Role-based access)
 Route::prefix('gestion')->middleware(['auth', 'role:admin,warehouse,cashier'])->name('staff.')->group(function () {
-    Route::get('/', function () {
-        return view('staff.dashboard');
-    })->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/pedidos', function () {
         return 'Gestión de pedidos (Sprint 4)';
     })->name('orders.index');
 
     Route::middleware('role:admin,warehouse')->group(function () {
-        Route::get('/inventario', function () {
-            return 'Inventario (Sprint 3)';
-        })->name('inventory.index');
+        Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
+        Route::get('/inventario/movimientos', [InventoryController::class, 'movements'])->name('inventory.movements');
 
-        Route::get('/lotes', function () {
-            return 'Lotes y caducidades (Sprint 3)';
-        })->name('batches.index');
+        Route::get('/inventario/entrada', [InventoryController::class, 'createReceipt'])->name('inventory.receipt');
+        Route::post('/inventario/entrada', [InventoryController::class, 'storeReceipt']);
+
+        Route::get('/inventario/traspaso', [InventoryController::class, 'createTransfer'])->name('inventory.transfer');
+        Route::post('/inventario/traspaso', [InventoryController::class, 'storeTransfer']);
+
+        Route::get('/inventario/ajuste', [InventoryController::class, 'createAdjustment'])->name('inventory.adjustment');
+        Route::post('/inventario/ajuste', [InventoryController::class, 'storeAdjustment']);
+
+        Route::get('/lotes', [InventoryController::class, 'batches'])->name('batches.index');
     });
 
     Route::middleware('role:admin,cashier')->group(function () {
-        Route::get('/tpv', function () {
-            return 'TPV Tienda (Sprint 3)';
-        })->name('pos.create');
+        Route::get('/tpv', [StoreSaleController::class, 'create'])->name('pos.create');
+        Route::post('/tpv', [StoreSaleController::class, 'store'])->name('pos.store');
     });
 
     Route::middleware('role:admin')->group(function () {
