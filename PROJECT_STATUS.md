@@ -24,7 +24,7 @@ Last Updated: 2026-10-25
   - Administrator catalogue management: full CRUD for categories and products with server-side validation and audit logging (`AuditLog::record`).
   - Automated tests: `CatalogTest` (6 tests) and `ProductAdminTest` (5 tests).
 
-- **Sprint 3 — Inventory (Completed & Verified on `sprint/3-inventory`):**
+- **Sprint 3 — Inventory (Completed & Merged into `develop`, tag `sprint-3`):**
   - Locations management (`locations`: warehouse vs. store, with `is_online_source`).
   - Stock levels (`stock_levels`: composite unique `product_id` + `location_id`, physical `quantity` and `reserved`).
   - Batch/Lot tracking (`batches`) with lot codes and expiry dates for perishable products.
@@ -34,23 +34,29 @@ Last Updated: 2026-10-25
   - Cashier in-store sales screen (POS) discounting store inventory in real time.
   - Staff Dashboard with real-time low-stock and near-expiry (&le; 3 days) alert cards.
   - Automated tests: `InventoryTest` (8 tests).
-  - Test suite: **34 passed**, 104 assertions. Code style: `pint --test` passed.
+
+- **Sprint 4 — Cart and Orders (Completed & Merged into `develop`, tag `sprint-4`):**
+  - Schema & models for `orders`, `order_items`, and `order_status_histories`.
+  - Shopping Cart (`CartService`) with unit-level validation and online available stock enforcement.
+  - Interactive Cart UI (`cart/index.blade.php`) and live Add-to-Cart form on product view.
+  - Multi-step Checkout (`checkout/index.blade.php`) with Barcelona city postcode validation (08001–08042) and free delivery rules.
+  - Atomic stock reservation (`reserved += qty`) with pessimistic database row locks preventing overselling.
+  - Customer Order tracking & timeline (`account/orders/index.blade.php`, `show.blade.php`).
+  - Back-office Staff Order processing (`staff/orders/index.blade.php`, `show.blade.php`) with status transition rules.
+  - Automated tests: `CheckoutTest` (5 tests), `OversellingTest` (2 tests), `OrderStatusTest` (4 tests).
+  - Test suite: **45 passed**, 155 assertions. Code style: `pint --test` clean.
 
 ## 2. Current Sprint
 
-- **Branch:** `sprint/3-inventory` ready for merge into `develop` and tagging `sprint-3`.
+- **Next:** **Sprint 5 — Payments and Fulfilment**
+- **Branch:** `sprint/5-payments-and-notifications`
 
-## 3. Next Actions
+## 3. Next Actions for Sprint 5
 
-1. Merge `sprint/3-inventory` into `develop` and tag `sprint-3`.
-2. Start **Sprint 4 — Cart and Orders**:
-   - Create migrations and models for `orders`, `order_items`, and `order_status_histories`.
-   - Implement `CartService` (session-based cart, unit validation, available online stock limits).
-   - Implement Cart UI (`cart/index.blade.php`).
-   - Implement `OrderService` and Checkout flow (`checkout/index.blade.php`):
-     - Delivery (Barcelona postcodes check, configurable fee) vs. Store pickup (free).
-     - Atomic stock reservation (`reserved += qty`) with `lockForUpdate()`.
-     - Creation of order in `pending_payment` state.
-   - Implement Customer Order History (`account/orders/index.blade.php`, `account/orders/show.blade.php`).
-   - Implement Staff Order Management with allowed state transitions per role.
-   - Add feature tests for Cart, Checkout, Stock Reservation, and Overselling prevention (`CheckoutTest`, `OversellingTest`, `OrderStatusTest`).
+1. Database schema: `payments` table (order reference, payment provider `stripe`/`mock`, method, amount, currency, status, transaction ID, raw payload).
+2. Implement `PaymentService` supporting simulated mock card payments and Stripe test mode.
+3. Customer payment UI and payment simulation screens.
+4. Stripe webhook handling controller (`StripeWebhookController`) with signature verification and idempotency.
+5. `NotificationService` sending order confirmation and status update emails (log/smtp mail driver in Spanish).
+6. Console command for unpaid order expiry (`php artisan orders:expire-unpaid`) releasing reserved stock after configured timeout (e.g. 30 minutes).
+7. Feature tests for payments, webhook idempotency, and automated stock reservation release on expiry.
