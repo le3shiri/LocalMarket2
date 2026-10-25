@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,37 +12,62 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    public const ADMIN = 'admin';
+
+    public const WAREHOUSE = 'warehouse';
+
+    public const CASHIER = 'cashier';
+
+    public const CUSTOMER = 'customer';
+
+    /** Role => Spanish label shown in the UI. */
+    public const ROLES = [
+        self::ADMIN => 'Administrador',
+        self::WAREHOUSE => 'Técnico de almacén',
+        self::CASHIER => 'Dependiente / Cajero',
+        self::CUSTOMER => 'Cliente',
+    ];
+
     protected $fillable = [
         'name',
         'email',
         'password',
+        'role',
+        'phone',
+        'is_active',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function hasRole(string ...$roles): bool
+    {
+        return in_array($this->role, $roles, true);
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->role !== self::CUSTOMER;
+    }
+
+    public function roleLabel(): string
+    {
+        return self::ROLES[$this->role] ?? $this->role;
     }
 }
