@@ -16,7 +16,8 @@ class OrderService
 {
     public function __construct(
         protected InventoryService $inventoryService,
-        protected CartService $cartService
+        protected CartService $cartService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -183,6 +184,9 @@ class OrderService
                 'to' => $newStatus,
                 'user' => $user?->name ?? 'Sistema',
             ]);
+
+            // Notify customer of status change
+            $this->notificationService->sendStatusUpdate($order, $newStatus, $note);
 
             return $order;
         });

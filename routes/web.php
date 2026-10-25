@@ -8,12 +8,14 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Staff\CategoryController;
 use App\Http\Controllers\Staff\DashboardController;
 use App\Http\Controllers\Staff\InventoryController;
 use App\Http\Controllers\Staff\OrderController as StaffOrderController;
 use App\Http\Controllers\Staff\ProductController;
 use App\Http\Controllers\Staff\StoreSaleController;
+use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,7 +62,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/mis-pedidos', [AccountOrderController::class, 'index'])->name('account.orders');
     Route::get('/mis-pedidos/{id}', [AccountOrderController::class, 'show'])->name('account.orders.show');
     Route::post('/mis-pedidos/{id}/cancelar', [AccountOrderController::class, 'cancel'])->name('account.orders.cancel');
+
+    // Customer Payment Gateway / Simulation
+    Route::get('/pedido/{id}/pago', [PaymentController::class, 'show'])->name('payment.show');
+    Route::post('/pedido/{id}/pago/simulado', [PaymentController::class, 'processMock'])->name('payment.mock');
+    Route::post('/pedido/{id}/pago/stripe-intent', [PaymentController::class, 'createStripeIntent'])->name('payment.stripe.intent');
 });
+
+// Asynchronous Stripe Webhook (No CSRF)
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])->name('webhooks.stripe');
 
 // Staff Management Routes (Role-based access)
 Route::prefix('gestion')->middleware(['auth', 'role:admin,warehouse,cashier'])->name('staff.')->group(function () {

@@ -59,9 +59,9 @@ class CheckoutController extends Controller
         try {
             $order = $this->orderService->createOrder(auth()->user(), $data);
 
-            // In Sprint 4/5, redirects to the payment simulation/gateway
-            return redirect()->route('account.orders.show', $order->id)
-                ->with('success', '¡Pedido registrado con éxito! Número: '.$order->number.'. Stock reservado.');
+            // In Sprint 5, redirects directly to payment checkout gateway/simulation
+            return redirect()->route('payment.show', $order->id)
+                ->with('success', '¡Pedido registrado! Número: '.$order->number.'. Procede con el pago para confirmar tu compra.');
         } catch (Exception $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }

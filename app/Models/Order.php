@@ -128,6 +128,16 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function latestPayment()
+    {
+        return $this->hasOne(Payment::class)->latestOfMany();
+    }
+
     public function statusHistories()
     {
         return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'desc');

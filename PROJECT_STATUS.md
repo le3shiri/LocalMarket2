@@ -46,17 +46,26 @@ Last Updated: 2026-10-25
   - Automated tests: `CheckoutTest` (5 tests), `OversellingTest` (2 tests), `OrderStatusTest` (4 tests).
   - Test suite: **45 passed**, 155 assertions. Code style: `pint --test` clean.
 
+- **Sprint 5 — Payments and Fulfilment (Completed & Merged into `develop`, tag `sprint-5`):**
+  - Database schema & model for `payments` (supporting `mock` and `stripe` providers).
+  - `PaymentService`: atomic transaction consuming stock reservations upon payment success, with audit logs and confirmation emails.
+  - Multi-provider gateway support: simulated card payment UI with QA toggles and Stripe test mode integration.
+  - Asynchronous webhook handling (`StripeWebhookController`) with idempotency and signature check.
+  - Plain-text Spanish email notifications (`NotificationService`) on order confirmation and status changes.
+  - Artisan command `orders:expire-unpaid` cancelling stale unpaid orders and releasing reserved inventory back to available stock.
+  - Automated tests: `PaymentTest` (5 tests).
+  - Test suite: **50 passed**, 193 assertions. Code style: `pint --test` clean.
+
 ## 2. Current Sprint
 
-- **Next:** **Sprint 5 — Payments and Fulfilment**
-- **Branch:** `sprint/5-payments-and-notifications`
+- **Next:** **Sprint 6 — Admin Management and Promotions**
+- **Branch:** `sprint/6-admin-and-promotions`
 
-## 3. Next Actions for Sprint 5
+## 3. Next Actions for Sprint 6
 
-1. Database schema: `payments` table (order reference, payment provider `stripe`/`mock`, method, amount, currency, status, transaction ID, raw payload).
-2. Implement `PaymentService` supporting simulated mock card payments and Stripe test mode.
-3. Customer payment UI and payment simulation screens.
-4. Stripe webhook handling controller (`StripeWebhookController`) with signature verification and idempotency.
-5. `NotificationService` sending order confirmation and status update emails (log/smtp mail driver in Spanish).
-6. Console command for unpaid order expiry (`php artisan orders:expire-unpaid`) releasing reserved stock after configured timeout (e.g. 30 minutes).
-7. Feature tests for payments, webhook idempotency, and automated stock reservation release on expiry.
+1. Database schema: `coupons` table (code, type: percentage/fixed, value, min_order_amount, max_uses, uses_count, starts_at, expires_at, is_active).
+2. Implement `CouponService` with discount calculation, validity checks, and usage limits.
+3. Integrate coupon input into the Checkout flow with real-time feedback and discount subtraction.
+4. Staff Admin Employee Management: full CRUD for internal staff users (`admin`, `warehouse`, `cashier`) with activation/deactivation toggles and password resets.
+5. Staff Admin Audit Trail Viewer: table and filters inspecting `audit_logs` (by action, entity, user, date).
+6. Automated feature tests for Coupons and Admin User/Audit management.
