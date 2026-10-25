@@ -517,7 +517,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 .nav { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; }
-.nav a, .nav button.link {
+.nav a:not(.btn):not(.badge), .nav button.link {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -532,13 +532,40 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     text-decoration: none;
     transition: all 0.15s ease;
 }
-.nav a:hover, .nav button.link:hover { background: var(--slate-100); color: var(--slate-900); }
+.nav a:not(.btn):not(.badge):hover, .nav button.link:hover {
+    background: var(--slate-100);
+    color: var(--slate-900);
+}
+
+.nav .btn { margin-left: 0.25rem; }
+
+.nav a.btn-primary, .nav .cart-link {
+    background: var(--emerald-600) !important;
+    color: #ffffff !important;
+    border: 1px solid var(--emerald-700) !important;
+    box-shadow: 0 1px 2px 0 rgba(5, 150, 105, 0.2) !important;
+}
+.nav a.btn-primary:hover, .nav .cart-link:hover {
+    background: var(--emerald-700) !important;
+    color: #ffffff !important;
+}
+
+.nav a.btn-outline {
+    background: transparent !important;
+    border: 1px solid var(--slate-300) !important;
+    color: var(--slate-700) !important;
+}
+.nav a.btn-outline:hover {
+    background: var(--slate-100) !important;
+    border-color: var(--slate-400) !important;
+    color: var(--slate-900) !important;
+}
 
 .cart-link { position: relative; }
 .cart-count {
-    background: var(--emerald-600);
-    color: #ffffff;
-    font-size: 0.7rem;
+    background: #ffffff;
+    color: var(--emerald-700);
+    font-size: 0.72rem;
     font-weight: 700;
     min-width: 20px;
     height: 20px;
@@ -546,8 +573,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 4px;
-    margin-left: 0.3rem;
+    padding: 0 5px;
+    margin-left: 0.35rem;
+    line-height: 1;
 }
 
 .menu-toggle { display: none; background: none; border: 0; cursor: pointer; color: var(--slate-700); }
@@ -718,6 +746,85 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .site-footer a:hover { color: #ffffff; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2.5rem; }
 .footer-bottom { border-top: 1px solid rgba(255, 255, 255, 0.08); margin-top: 2.5rem; padding-top: 1.25rem; font-size: 0.8rem; color: var(--slate-500); }
+
+/* ---------- 6.5 Auth Pages (Login, Register, Password Recovery) ---------- */
+.auth-wrap {
+    min-height: calc(100vh - 220px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.25rem;
+    background: radial-gradient(circle at 15% 20%, rgba(5, 150, 105, 0.08), transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(217, 119, 6, 0.06), transparent 45%),
+                var(--bg-page);
+}
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    padding: 2.25rem;
+    border: 1px solid var(--border-light);
+    animation: fadeUp 0.35s var(--ease) both;
+}
+.auth-card h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+    margin-bottom: 0.35rem;
+    color: var(--slate-900);
+    letter-spacing: -0.02em;
+}
+.auth-card .sub {
+    color: var(--slate-500);
+    margin-bottom: 1.5rem;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+.auth-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.84rem;
+    margin-top: 1.25rem;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.auth-links a {
+    color: var(--emerald-700);
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+.auth-links a:hover {
+    color: var(--emerald-800);
+    text-decoration: underline;
+}
+.demo-box {
+    margin-top: 1.5rem;
+    font-size: 0.8rem;
+    background: var(--slate-50);
+    border: 1px dashed var(--slate-300);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem 1rem;
+    color: var(--slate-700);
+    line-height: 1.65;
+}
+.demo-box strong {
+    color: var(--slate-900);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+.demo-box code {
+    background: #ffffff;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid var(--slate-200);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.78rem;
+    color: var(--emerald-800);
+    font-weight: 600;
+}
 
 /* ---------- 7. Staff SaaS Layout (Sidebar, Topbar, KPI Cards) ---------- */
 .staff-body {

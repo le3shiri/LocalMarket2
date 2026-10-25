@@ -93,6 +93,7 @@
     </header>
 
     <main>
+        @if (session('success') || session('error') || $errors->any())
         <div class="container" style="padding-top: 1.25rem;">
             @if (session('success'))
                 <div class="alert alert-success" data-autohide role="alert">
@@ -122,6 +123,7 @@
                 </div>
             @endif
         </div>
+        @endif
 
         @yield('content')
     </main>
