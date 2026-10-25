@@ -291,5 +291,190 @@ class DatabaseSeeder extends Seeder
                 );
             }
         }
+
+        // 5. Seed Demonstration Coupons
+        \App\Models\Coupon::firstOrCreate(
+            ['code' => 'BIENVENIDA10'],
+            [
+                'description' => '10% de descuento en tu compra (pedido mín. 15 €)',
+                'type' => \App\Models\Coupon::TYPE_PERCENTAGE,
+                'value' => 10.00,
+                'min_order_amount' => 15.00,
+                'max_uses' => 200,
+                'uses_count' => 12,
+                'starts_at' => now()->subMonth(),
+                'expires_at' => now()->addMonths(6),
+                'is_active' => true,
+            ]
+        );
+
+        \App\Models\Coupon::firstOrCreate(
+            ['code' => 'FRESCOS5'],
+            [
+                'description' => '5 € de descuento directo en compras superiores a 30 €',
+                'type' => \App\Models\Coupon::TYPE_FIXED,
+                'value' => 5.00,
+                'min_order_amount' => 30.00,
+                'max_uses' => 100,
+                'uses_count' => 5,
+                'starts_at' => now()->subMonth(),
+                'expires_at' => now()->addMonths(3),
+                'is_active' => true,
+            ]
+        );
+
+        \App\Models\Coupon::firstOrCreate(
+            ['code' => 'VERANO20'],
+            [
+                'description' => '20% de descuento de temporada',
+                'type' => \App\Models\Coupon::TYPE_PERCENTAGE,
+                'value' => 20.00,
+                'min_order_amount' => 40.00,
+                'max_uses' => 50,
+                'uses_count' => 0,
+                'starts_at' => now()->subDays(5),
+                'expires_at' => now()->addMonths(2),
+                'is_active' => true,
+            ]
+        );
+
+        // 6. Seed Sample Orders for Customer
+        $customer = User::where('email', 'cliente@localmarket.test')->first();
+        if ($customer) {
+            $sampleProduct1 = Product::where('slug', 'platano-de-canarias')->first() ?? Product::first();
+            $sampleProduct2 = Product::where('slug', 'leche-entera-larsa-1l')->first() ?? Product::skip(1)->first();
+
+            // Sample Completed Order
+            $order1 = \App\Models\Order::firstOrCreate(
+                ['number' => 'LM-20261020-00124'],
+                [
+                    'user_id' => $customer->id,
+                    'status' => \App\Models\Order::STATUS_COMPLETED,
+                    'payment_status' => \App\Models\Order::PAYMENT_PAID,
+                    'fulfilment_method' => \App\Models\Order::FULFILMENT_DELIVERY,
+                    'subtotal' => 28.50,
+                    'discount' => 2.85,
+                    'delivery_fee' => 4.95,
+                    'total' => 30.60,
+                    'coupon_code' => 'BIENVENIDA10',
+                    'customer_name' => $customer->name,
+                    'customer_email' => $customer->email,
+                    'phone' => '612345678',
+                    'address' => 'Carrer de Mallorca 245, 3r 2a',
+                    'postcode' => '08008',
+                    'city' => 'Barcelona',
+                    'paid_at' => now()->subDays(5),
+                    'created_at' => now()->subDays(5),
+                ]
+            );
+
+            if ($order1->wasRecentlyCreated && $sampleProduct1) {
+                \App\Models\OrderItem::create([
+                    'order_id' => $order1->id,
+                    'product_id' => $sampleProduct1->id,
+                    'product_name' => $sampleProduct1->name,
+                    'sale_unit' => $sampleProduct1->sale_unit,
+                    'unit_price' => $sampleProduct1->price,
+                    'quantity' => 2.0,
+                    'line_total' => $sampleProduct1->price * 2.0,
+                ]);
+
+                \App\Models\Payment::create([
+                    'order_id' => $order1->id,
+                    'provider' => \App\Models\Payment::PROVIDER_MOCK,
+                    'transaction_id' => 'mock_seed_101',
+                    'status' => \App\Models\Payment::STATUS_COMPLETED,
+                    'currency' => 'EUR',
+                    'amount' => 30.60,
+                    'payment_method' => 'card',
+                    'card_last4' => '4242',
+                    'card_brand' => 'Visa',
+                    'completed_at' => now()->subDays(5),
+                ]);
+
+                $order1->statusHistories()->create([
+                    'from_status' => null,
+                    'to_status' => \App\Models\Order::STATUS_PENDING_PAYMENT,
+                    'note' => 'Pedido tramitado.',
+                    'created_at' => now()->subDays(5),
+                ]);
+                $order1->statusHistories()->create([
+                    'from_status' => \App\Models\Order::STATUS_PENDING_PAYMENT,
+                    'to_status' => \App\Models\Order::STATUS_CONFIRMED,
+                    'note' => 'Pago verificado.',
+                    'created_at' => now()->subDays(5),
+                ]);
+                $order1->statusHistories()->create([
+                    'from_status' => \App\Models\Order::STATUS_CONFIRMED,
+                    'to_status' => \App\Models\Order::STATUS_COMPLETED,
+                    'note' => 'Entregado a domicilio en Barcelona.',
+                    'created_at' => now()->subDays(4),
+                ]);
+            }
+
+            // Sample Preparing Pickup Order
+            $order2 = \App\Models\Order::firstOrCreate(
+                ['number' => 'LM-20261025-00891'],
+                [
+                    'user_id' => $customer->id,
+                    'status' => \App\Models\Order::STATUS_PREPARING,
+                    'payment_status' => \App\Models\Order::PAYMENT_PAID,
+                    'fulfilment_method' => \App\Models\Order::FULFILMENT_PICKUP,
+                    'subtotal' => 18.20,
+                    'discount' => 0.00,
+                    'delivery_fee' => 0.00,
+                    'total' => 18.20,
+                    'customer_name' => $customer->name,
+                    'customer_email' => $customer->email,
+                    'phone' => '612345678',
+                    'paid_at' => now()->subHours(2),
+                    'created_at' => now()->subHours(2),
+                ]
+            );
+
+            if ($order2->wasRecentlyCreated && $sampleProduct2) {
+                \App\Models\OrderItem::create([
+                    'order_id' => $order2->id,
+                    'product_id' => $sampleProduct2->id,
+                    'product_name' => $sampleProduct2->name,
+                    'sale_unit' => $sampleProduct2->sale_unit,
+                    'unit_price' => $sampleProduct2->price,
+                    'quantity' => 3.0,
+                    'line_total' => $sampleProduct2->price * 3.0,
+                ]);
+
+                \App\Models\Payment::create([
+                    'order_id' => $order2->id,
+                    'provider' => \App\Models\Payment::PROVIDER_MOCK,
+                    'transaction_id' => 'mock_seed_102',
+                    'status' => \App\Models\Payment::STATUS_COMPLETED,
+                    'currency' => 'EUR',
+                    'amount' => 18.20,
+                    'payment_method' => 'card',
+                    'card_last4' => '1234',
+                    'card_brand' => 'Mastercard',
+                    'completed_at' => now()->subHours(2),
+                ]);
+
+                $order2->statusHistories()->create([
+                    'from_status' => null,
+                    'to_status' => \App\Models\Order::STATUS_PENDING_PAYMENT,
+                    'note' => 'Pedido tramitado con recogida en tienda.',
+                    'created_at' => now()->subHours(2),
+                ]);
+                $order2->statusHistories()->create([
+                    'from_status' => \App\Models\Order::STATUS_PENDING_PAYMENT,
+                    'to_status' => \App\Models\Order::STATUS_CONFIRMED,
+                    'note' => 'Pago confirmado.',
+                    'created_at' => now()->subHours(2),
+                ]);
+                $order2->statusHistories()->create([
+                    'from_status' => \App\Models\Order::STATUS_CONFIRMED,
+                    'to_status' => \App\Models\Order::STATUS_PREPARING,
+                    'note' => 'Personal de tienda preparando cesta de frescos.',
+                    'created_at' => now()->subHour(),
+                ]);
+            }
+        }
     }
 }
